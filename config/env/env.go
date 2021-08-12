@@ -30,21 +30,21 @@ func (e *env) load(envStrings []string) []*config.KeyValue {
 		}
 
 		if len(e.prefixs) > 0 {
-			p, ok := matchPrefix(e.prefixs, envstr)
-			if !ok {
+			p, ok := matchPrefix(e.prefixs, k)
+			if !ok || len(p) == len(k) {
 				continue
 			}
 			// trim prefix
-			k = k[len(p):]
-			if k[0] == '_' {
-				k = k[1:]
-			}
+			k = strings.TrimPrefix(k, p)
+			k = strings.TrimPrefix(k, "_")
 		}
 
-		kv = append(kv, &config.KeyValue{
-			Key:   k,
-			Value: []byte(v),
-		})
+		if len(k) != 0 {
+			kv = append(kv, &config.KeyValue{
+				Key:   k,
+				Value: []byte(v),
+			})
+		}
 	}
 	return kv
 }
@@ -57,8 +57,8 @@ func (e *env) Watch() (config.Watcher, error) {
 	return w, nil
 }
 
-func matchPrefix(prefixs []string, s string) (string, bool) {
-	for _, p := range prefixs {
+func matchPrefix(prefixes []string, s string) (string, bool) {
+	for _, p := range prefixes {
 		if strings.HasPrefix(s, p) {
 			return p, true
 		}
